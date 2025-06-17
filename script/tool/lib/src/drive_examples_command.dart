@@ -2,21 +2,23 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:file/file.dart';
 
 import 'common/core.dart';
+import 'common/file_filters.dart';
 import 'common/output_utils.dart';
 import 'common/package_looping_command.dart';
 import 'common/plugin_utils.dart';
 import 'common/repository_package.dart';
 
-const int _exitNoPlatformFlags = 2;
+const int _exitInvalidArgs = 2;
 const int _exitNoAvailableDevice = 3;
 
-// From https://docs.flutter.dev/testing/integration-tests#running-in-a-browser
+// From https://flutter.dev/to/integration-test-on-web
 const int _chromeDriverPort = 4444;
 
 /// A command to run the integration tests for a package's example applications.
@@ -26,6 +28,7 @@ class DriveExamplesCommand extends PackageLoopingCommand {
     super.packagesDir, {
     super.processRunner,
     super.platform,
+    super.gitDir,
   }) {
     argParser.addFlag(platformAndroid,
         help: 'Runs the Android implementation of the examples',
@@ -40,6 +43,8 @@ class DriveExamplesCommand extends PackageLoopingCommand {
         help: 'Runs the web implementation of the examples');
     argParser.addFlag(platformWindows,
         help: 'Runs the Windows implementation of the examples');
+    argParser.addFlag(kWebWasmFlag,
+        help: 'Compile to WebAssembly rather than JavaScript');
     argParser.addOption(
       kEnableExperiment,
       defaultsTo: '',
@@ -65,6 +70,17 @@ class DriveExamplesCommand extends PackageLoopingCommand {
   Map<String, List<String>> _targetDeviceFlags = const <String, List<String>>{};
 
   @override
+  bool shouldIgnoreFile(String path) {
+    return isRepoLevelNonCodeImpactingFile(path) ||
+        isPackageSupportFile(path) ||
+        // This isn't part of isRepoLevelNonCodeImpactingFile since there could
+        // potentially be code-based commands that it could affect, but it
+        // should not affect integration tests, and they are the most expensive
+        // and flaky tests.
+        path == '.gitignore';
+  }
+
+  @override
   Future<void> initializeRun() async {
     final List<String> platformSwitches = <String>[
       platformAndroid,
@@ -84,7 +100,7 @@ class DriveExamplesCommand extends PackageLoopingCommand {
       printError(
           'Exactly one of ${platformSwitches.map((String platform) => '--$platform').join(', ')} '
           'must be specified.');
-      throw ToolExit(_exitNoPlatformFlags);
+      throw ToolExit(_exitInvalidArgs);
     }
 
     String? androidDevice;
@@ -107,19 +123,30 @@ class DriveExamplesCommand extends PackageLoopingCommand {
       iOSDevice = devices.first;
     }
 
+    final bool useWasm = getBoolArg(kWebWasmFlag);
+    final bool hasPlatformWeb = getBoolArg(platformWeb);
+    if (useWasm && !hasPlatformWeb) {
+      printError('--wasm is only supported on the web platform');
+      throw ToolExit(_exitInvalidArgs);
+    }
+
     _targetDeviceFlags = <String, List<String>>{
       if (getBoolArg(platformAndroid))
         platformAndroid: <String>['-d', androidDevice!],
       if (getBoolArg(platformIOS)) platformIOS: <String>['-d', iOSDevice!],
       if (getBoolArg(platformLinux)) platformLinux: <String>['-d', 'linux'],
       if (getBoolArg(platformMacOS)) platformMacOS: <String>['-d', 'macos'],
-      if (getBoolArg(platformWeb))
+      if (hasPlatformWeb)
         platformWeb: <String>[
           '-d',
           'web-server',
+          // TODO(stuartmorgan): Remove once drive works without it. See
+          // https://github.com/dart-lang/sdk/issues/60289 and
+          // https://github.com/flutter/flutter/pull/169174
+          '--no-web-experimental-hot-reload',
           '--web-port=7357',
           '--browser-name=chrome',
-          '--web-renderer=html',
+          if (useWasm) '--wasm',
           if (platform.environment.containsKey('CHROME_EXECUTABLE'))
             '--chrome-binary=${platform.environment['CHROME_EXECUTABLE']}',
         ],
@@ -213,8 +240,12 @@ class DriveExamplesCommand extends PackageLoopingCommand {
         }
         for (final File driver in drivers) {
           final List<File> failingTargets = await _driveTests(
-              example, driver, testTargets,
-              deviceFlags: deviceFlags);
+            example,
+            driver,
+            testTargets,
+            deviceFlags: deviceFlags,
+            exampleName: exampleName,
+          );
           for (final File failingTarget in failingTargets) {
             errors.add(
                 getRelativePosixPath(failingTarget, from: package.directory));
@@ -361,10 +392,16 @@ class DriveExamplesCommand extends PackageLoopingCommand {
     File driver,
     List<File> targets, {
     required List<String> deviceFlags,
+    required String exampleName,
   }) async {
     final List<File> failures = <File>[];
 
     final String enableExperiment = getStringArg(kEnableExperiment);
+    final String screenshotBasename =
+        '${exampleName.replaceAll(platform.pathSeparator, '_')}-drive';
+    final Directory? screenshotDirectory =
+        ciLogsDirectory(platform, driver.fileSystem)
+            ?.childDirectory(screenshotBasename);
 
     for (final File target in targets) {
       final int exitCode = await processRunner.runAndStream(
@@ -374,6 +411,8 @@ class DriveExamplesCommand extends PackageLoopingCommand {
             ...deviceFlags,
             if (enableExperiment.isNotEmpty)
               '--enable-experiment=$enableExperiment',
+            if (screenshotDirectory != null)
+              '--screenshot=${screenshotDirectory.path}',
             '--driver',
             getRelativePosixPath(driver, from: example.directory),
             '--target',
@@ -401,6 +440,8 @@ class DriveExamplesCommand extends PackageLoopingCommand {
     required List<File> testFiles,
   }) async {
     final String enableExperiment = getStringArg(kEnableExperiment);
+    final Directory? logsDirectory =
+        ciLogsDirectory(platform, testFiles.first.fileSystem);
 
     // Workaround for https://github.com/flutter/flutter/issues/135673
     // Once that is fixed on stable, this logic can be removed and the command
@@ -416,16 +457,36 @@ class DriveExamplesCommand extends PackageLoopingCommand {
 
     bool passed = true;
     for (final String target in individualRunTargets) {
-      final int exitCode = await processRunner.runAndStream(
+      final Timer timeoutTimer = Timer(const Duration(minutes: 10), () async {
+        final String screenshotBasename =
+            'test-timeout-screenshot_${target.replaceAll(platform.pathSeparator, '_')}.png';
+        printWarning(
+            'Test is taking a long time, taking screenshot $screenshotBasename...');
+        await processRunner.runAndStream(
           flutterCommand,
           <String>[
-            'test',
+            'screenshot',
             ...deviceFlags,
-            if (enableExperiment.isNotEmpty)
-              '--enable-experiment=$enableExperiment',
-            target,
+            if (logsDirectory != null)
+              '--out=${logsDirectory.childFile(screenshotBasename).path}',
           ],
-          workingDir: example.directory);
+          workingDir: example.directory,
+        );
+      });
+      final int exitCode = await processRunner.runAndStream(
+        flutterCommand,
+        <String>[
+          'test',
+          ...deviceFlags,
+          if (enableExperiment.isNotEmpty)
+            '--enable-experiment=$enableExperiment',
+          if (logsDirectory != null) '--debug-logs-dir=${logsDirectory.path}',
+          target,
+        ],
+        workingDir: example.directory,
+      );
+
+      timeoutTimer.cancel();
       passed = passed && (exitCode == 0);
     }
     return passed;

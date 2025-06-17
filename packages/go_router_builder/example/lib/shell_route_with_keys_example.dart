@@ -57,7 +57,7 @@ class MyShellRouteScreen extends StatelessWidget {
   final Widget child;
 
   int getCurrentIndex(BuildContext context) {
-    final String location = GoRouterState.of(context).uri.toString();
+    final String location = GoRouterState.of(context).uri.path;
     if (location.startsWith('/users')) {
       return 1;
     }
@@ -100,7 +100,7 @@ class MyShellRouteScreen extends StatelessWidget {
   }
 }
 
-class HomeRouteData extends GoRouteData {
+class HomeRouteData extends GoRouteData with _$HomeRouteData {
   const HomeRouteData();
 
   @override
@@ -109,7 +109,7 @@ class HomeRouteData extends GoRouteData {
   }
 }
 
-class UsersRouteData extends GoRouteData {
+class UsersRouteData extends GoRouteData with _$UsersRouteData {
   const UsersRouteData();
 
   @override
@@ -143,7 +143,7 @@ class DialogPage extends Page<void> {
   }
 }
 
-class UserRouteData extends GoRouteData {
+class UserRouteData extends GoRouteData with _$UserRouteData {
   const UserRouteData({required this.id});
 
   // Without this static key, the dialog will not cover the navigation rail.

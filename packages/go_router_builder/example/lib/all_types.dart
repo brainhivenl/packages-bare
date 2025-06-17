@@ -29,7 +29,7 @@ part 'all_types.g.dart';
       path: 'iterable-route-with-default-values'),
 ])
 @immutable
-class AllTypesBaseRoute extends GoRouteData {
+class AllTypesBaseRoute extends GoRouteData with _$AllTypesBaseRoute {
   const AllTypesBaseRoute();
 
   @override
@@ -39,7 +39,7 @@ class AllTypesBaseRoute extends GoRouteData {
       );
 }
 
-class BigIntRoute extends GoRouteData {
+class BigIntRoute extends GoRouteData with _$BigIntRoute {
   BigIntRoute({
     required this.requiredBigIntField,
     this.bigIntField,
@@ -58,11 +58,11 @@ class BigIntRoute extends GoRouteData {
   Widget drawerTile(BuildContext context) => ListTile(
         title: const Text('BigIntRoute'),
         onTap: () => go(context),
-        selected: GoRouterState.of(context).uri.toString() == location,
+        selected: GoRouterState.of(context).uri.path == location,
       );
 }
 
-class BoolRoute extends GoRouteData {
+class BoolRoute extends GoRouteData with _$BoolRoute {
   BoolRoute({
     required this.requiredBoolField,
     this.boolField,
@@ -84,11 +84,11 @@ class BoolRoute extends GoRouteData {
   Widget drawerTile(BuildContext context) => ListTile(
         title: const Text('BoolRoute'),
         onTap: () => go(context),
-        selected: GoRouterState.of(context).uri.toString() == location,
+        selected: GoRouterState.of(context).uri.path == location,
       );
 }
 
-class DateTimeRoute extends GoRouteData {
+class DateTimeRoute extends GoRouteData with _$DateTimeRoute {
   DateTimeRoute({
     required this.requiredDateTimeField,
     this.dateTimeField,
@@ -107,11 +107,11 @@ class DateTimeRoute extends GoRouteData {
   Widget drawerTile(BuildContext context) => ListTile(
         title: const Text('DateTimeRoute'),
         onTap: () => go(context),
-        selected: GoRouterState.of(context).uri.toString() == location,
+        selected: GoRouterState.of(context).uri.path == location,
       );
 }
 
-class DoubleRoute extends GoRouteData {
+class DoubleRoute extends GoRouteData with _$DoubleRoute {
   DoubleRoute({
     required this.requiredDoubleField,
     this.doubleField,
@@ -133,11 +133,11 @@ class DoubleRoute extends GoRouteData {
   Widget drawerTile(BuildContext context) => ListTile(
         title: const Text('DoubleRoute'),
         onTap: () => go(context),
-        selected: GoRouterState.of(context).uri.toString() == location,
+        selected: GoRouterState.of(context).uri.path == location,
       );
 }
 
-class IntRoute extends GoRouteData {
+class IntRoute extends GoRouteData with _$IntRoute {
   IntRoute({
     required this.requiredIntField,
     this.intField,
@@ -159,11 +159,11 @@ class IntRoute extends GoRouteData {
   Widget drawerTile(BuildContext context) => ListTile(
         title: const Text('IntRoute'),
         onTap: () => go(context),
-        selected: GoRouterState.of(context).uri.toString() == location,
+        selected: GoRouterState.of(context).uri.path == location,
       );
 }
 
-class NumRoute extends GoRouteData {
+class NumRoute extends GoRouteData with _$NumRoute {
   NumRoute({
     required this.requiredNumField,
     this.numField,
@@ -185,11 +185,11 @@ class NumRoute extends GoRouteData {
   Widget drawerTile(BuildContext context) => ListTile(
         title: const Text('NumRoute'),
         onTap: () => go(context),
-        selected: GoRouterState.of(context).uri.toString() == location,
+        selected: GoRouterState.of(context).uri.path == location,
       );
 }
 
-class EnumRoute extends GoRouteData {
+class EnumRoute extends GoRouteData with _$EnumRoute {
   EnumRoute({
     required this.requiredEnumField,
     this.enumField,
@@ -212,11 +212,11 @@ class EnumRoute extends GoRouteData {
   Widget drawerTile(BuildContext context) => ListTile(
         title: const Text('EnumRoute'),
         onTap: () => go(context),
-        selected: GoRouterState.of(context).uri.toString() == location,
+        selected: GoRouterState.of(context).uri.path == location,
       );
 }
 
-class EnhancedEnumRoute extends GoRouteData {
+class EnhancedEnumRoute extends GoRouteData with _$EnhancedEnumRoute {
   EnhancedEnumRoute({
     required this.requiredEnumField,
     this.enumField,
@@ -239,11 +239,11 @@ class EnhancedEnumRoute extends GoRouteData {
   Widget drawerTile(BuildContext context) => ListTile(
         title: const Text('EnhancedEnumRoute'),
         onTap: () => go(context),
-        selected: GoRouterState.of(context).uri.toString() == location,
+        selected: GoRouterState.of(context).uri.path == location,
       );
 }
 
-class StringRoute extends GoRouteData {
+class StringRoute extends GoRouteData with _$StringRoute {
   StringRoute({
     required this.requiredStringField,
     this.stringField,
@@ -265,11 +265,11 @@ class StringRoute extends GoRouteData {
   Widget drawerTile(BuildContext context) => ListTile(
         title: const Text('StringRoute'),
         onTap: () => go(context),
-        selected: GoRouterState.of(context).uri.toString() == location,
+        selected: GoRouterState.of(context).uri.path == location,
       );
 }
 
-class UriRoute extends GoRouteData {
+class UriRoute extends GoRouteData with _$UriRoute {
   UriRoute({
     required this.requiredUriField,
     this.uriField,
@@ -288,11 +288,11 @@ class UriRoute extends GoRouteData {
   Widget drawerTile(BuildContext context) => ListTile(
         title: const Text('UriRoute'),
         onTap: () => go(context),
-        selected: GoRouterState.of(context).uri.toString() == location,
+        selected: GoRouterState.of(context).uri.path == location,
       );
 }
 
-class IterableRoute extends GoRouteData {
+class IterableRoute extends GoRouteData with _$IterableRoute {
   IterableRoute({
     this.intIterableField,
     this.doubleIterableField,
@@ -361,11 +361,12 @@ class IterableRoute extends GoRouteData {
   Widget drawerTile(BuildContext context) => ListTile(
         title: const Text('IterableRoute'),
         onTap: () => go(context),
-        selected: GoRouterState.of(context).uri.toString() == location,
+        selected: GoRouterState.of(context).uri.path == location,
       );
 }
 
-class IterableRouteWithDefaultValues extends GoRouteData {
+class IterableRouteWithDefaultValues extends GoRouteData
+    with _$IterableRouteWithDefaultValues {
   const IterableRouteWithDefaultValues({
     this.intIterableField = const <int>[0],
     this.doubleIterableField = const <double>[0, 1, 2],
@@ -430,7 +431,7 @@ class IterableRouteWithDefaultValues extends GoRouteData {
   Widget drawerTile(BuildContext context) => ListTile(
         title: const Text('IterableRouteWithDefaultValues'),
         onTap: () => go(context),
-        selected: GoRouterState.of(context).uri.toString() == location,
+        selected: GoRouterState.of(context).uri.path == location,
       );
 }
 
@@ -536,7 +537,9 @@ class BasePage<T> extends StatelessWidget {
               Text(
                 'Query param with default value: $queryParamWithDefaultValue',
               ),
-              SelectableText(GoRouterState.of(context).uri.toString()),
+              SelectableText(GoRouterState.of(context).uri.path),
+              SelectableText(
+                  GoRouterState.of(context).uri.queryParameters.toString()),
             ],
           ),
         ),

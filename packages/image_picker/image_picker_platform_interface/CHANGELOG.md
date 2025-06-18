@@ -1,3 +1,16 @@
+## NEXT
+
+* Updates minimum supported SDK version to Flutter 3.27/Dart 3.6.
+
+## 2.10.1
+
+* Updates minimum supported SDK version to Flutter 3.22/Dart 3.4.
+* Fixes Wasm tests in internal PickedFile implementation.
+
+## 2.10.0
+
+* Adds limit parameter to `MediaOptions` and `MultiImagePickerOptions`.
+
 ## 2.9.4
 
 * Updates minimum supported SDK version to Flutter 3.19/Dart 3.3.

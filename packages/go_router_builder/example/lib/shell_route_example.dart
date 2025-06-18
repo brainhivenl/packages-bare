@@ -53,7 +53,7 @@ class MyShellRouteData extends ShellRouteData {
   }
 }
 
-class FooRouteData extends GoRouteData {
+class FooRouteData extends GoRouteData with _$FooRouteData {
   const FooRouteData();
 
   @override
@@ -62,7 +62,7 @@ class FooRouteData extends GoRouteData {
   }
 }
 
-class BarRouteData extends GoRouteData {
+class BarRouteData extends GoRouteData with _$BarRouteData {
   const BarRouteData();
 
   @override
@@ -77,7 +77,7 @@ class MyShellRouteScreen extends StatelessWidget {
   final Widget child;
 
   int getCurrentIndex(BuildContext context) {
-    final String location = GoRouterState.of(context).uri.toString();
+    final String location = GoRouterState.of(context).uri.path;
     if (location == '/bar') {
       return 1;
     }
@@ -133,7 +133,7 @@ class BarScreen extends StatelessWidget {
 }
 
 @TypedGoRoute<LoginRoute>(path: '/login')
-class LoginRoute extends GoRouteData {
+class LoginRoute extends GoRouteData with _$LoginRoute {
   const LoginRoute();
 
   @override

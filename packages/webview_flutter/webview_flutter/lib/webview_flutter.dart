@@ -5,6 +5,8 @@
 export 'package:webview_flutter_platform_interface/webview_flutter_platform_interface.dart'
     show
         HttpAuthRequest,
+        HttpResponseError,
+        HttpResponseErrorCallback,
         JavaScriptAlertDialogRequest,
         JavaScriptConfirmDialogRequest,
         JavaScriptConsoleMessage,
@@ -28,10 +30,14 @@ export 'package:webview_flutter_platform_interface/webview_flutter_platform_inte
         WebResourceError,
         WebResourceErrorCallback,
         WebResourceErrorType,
+        WebResourceRequest,
+        WebResourceResponse,
         WebViewCookie,
         WebViewCredential,
+        WebViewOverScrollMode,
         WebViewPermissionResourceType,
-        WebViewPlatform;
+        WebViewPlatform,
+        X509Certificate;
 
 export 'src/navigation_delegate.dart';
 export 'src/webview_controller.dart';
